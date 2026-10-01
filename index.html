@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>部首大冒險</title>
+<style>
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; min-height:100%;
+    background: radial-gradient(circle at 50% 0%, #1e3a5f 0%, #0b1220 70%);
+    font-family:"KaiTi","STKaiti","標楷體","DFKai-SB","PingFang TC","Microsoft JhengHei",sans-serif;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #app{
+    position:relative;
+    width: min(96vw, 900px, 150vh);
+    aspect-ratio: 900 / 520;
+    border-radius:22px;
+    overflow:hidden;
+    background:#cfeaff;
+    box-shadow: 0 30px 80px rgba(0,0,0,.65), 0 0 0 4px rgba(255,255,255,.08);
+    touch-action:none;
+    user-select:none;
+  }
+  #game{ display:block; width:100%; height:100%; touch-action:none; }
+
+  #hud{
+    position:absolute; inset:0 0 auto 0;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding: clamp(8px,1.6%,18px) clamp(10px,2.2%,24px);
+    pointer-events:none;
+    color:#123152;
+    font-weight:800;
+    font-size: clamp(11px, 1.7vw, 16px);
+    text-shadow: 0 1px 0 rgba(255,255,255,.7);
+    transition: opacity .3s;
+  }
+  #hud.hidden{ opacity:0; }
+  .hud-left{ display:flex; flex-direction:column; gap:6px; }
+  .hud-bar{
+    width: clamp(90px, 22vw, 200px); height:10px;
+    background: rgba(255,255,255,.65);
+    border-radius:6px; overflow:hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.12);
+  }
+  #hudBar{
+    height:100%; width:0%;
+    background: linear-gradient(90deg,#38bdf8,#0ea5e9);
+    border-radius:6px;
+    transition: width .18s ease-out;
+  }
+  .hud-right{ display:flex; align-items:center; gap: clamp(8px,1.6vw,18px); }
+  .hud-score b{ font-size:1.3em; color:#0b6fb8; }
+  .hud-badge{
+    background: rgba(255,255,255,.85);
+    border-radius: 12px;
+    padding: 5px 12px;
+    display:flex; align-items:center; gap:7px;
+    box-shadow: 0 3px 10px rgba(0,0,0,.1);
+    white-space:nowrap;
+  }
+  .hud-badge i{
+    font-style:normal;
+    font-family:"KaiTi","STKaiti","標楷體",serif;
+    font-size:1.7em;
+    line-height:1;
+    color:#0b6fb8;
+  }
+
+  .overlay{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    padding:3%;
+    background: rgba(8,22,40,.5);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition: opacity .25s;
+    z-index:5;
+  }
+  .overlay.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+
+  .panel{
+    background: rgba(255,255,255,.97);
+    border-radius: 22px;
+    padding: clamp(14px,2.6vw,30px) clamp(16px,3vw,36px);
+    width:100%; max-width: 780px; max-height:100%;
+    overflow-y:auto;
+    box-shadow: 0 20px 50px rgba(0,0,0,.4);
+    text-align:center;
+    color:#1e293b;
+  }
+  .panel h1{
+    margin:0 0 6px;
+    font-size: clamp(20px, 3.4vw, 34px);
+    letter-spacing:2px;
+    color:#0b4a75;
+  }
+  .sub{ margin:0 0 14px; font-size: clamp(11px,1.6vw,15px); color:#5b7089; }
+
+  .rules{
+    text-align:left;
+    background:#f1f7fd;
+    border-radius:14px;
+    padding: clamp(8px,1.4vw,14px) clamp(12px,2vw,20px);
+    font-size: clamp(10.5px,1.45vw,14px);
+    line-height:1.9;
+    color:#39516b;
+    margin-bottom:16px;
+    border:1px solid #dbeafe;
+  }
+  .rules b{ color:#0b6fb8; }
+  .rules .tag{
+    display:inline-block; background:#dcfce7; color:#15803d;
+    border-radius:6px; padding:0 6px; font-weight:800;
+  }
+  .rules .tag2{
+    display:inline-block; background:#fee2e2; color:#b91c1c;
+    border-radius:6px; padding:0 6px; font-weight:800;
+  }
+
+  .levels{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(6px,1.2vw,12px);
+  }
+  @media (max-width: 640px){
+    .levels{ grid-template-columns: repeat(2, 1fr); }
+  }
+  .level-card{
+    border:none; cursor:pointer;
+    border-radius:16px;
+    padding: clamp(8px,1.6vw,16px) 6px;
+    background: linear-gradient(160deg,#ffffff,#eaf4ff);
+    box-shadow: 0 4px 14px rgba(11,74,117,.12);
+    border:2px solid transparent;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+    font-family: inherit;
+    color:#123152;
+  }
+  .level-card:hover{ transform: translateY(-4px); box-shadow:0 10px 24px rgba(11,74,117,.22); }
+  .level-card:active{ transform: translateY(-1px) scale(.98); }
+  .level-card .r{
+    display:block;
+    font-family:"KaiTi","STKaiti","標楷體",serif;
+    font-size: clamp(24px, 4.2vw, 42px);
+    font-weight:700;
+    line-height:1.1;
+    margin-bottom:2px;
+  }
+  .level-card .n{ display:block; font-size: clamp(10px,1.4vw,14px); font-weight:800; }
+  .level-card .d{ display:block; font-size: clamp(8px,1.1vw,11px); color:#7b8fa8; margin-top:2px; }
+  .level-card.c1 .r{ color:#2b8fe0; }
+  .level-card.c2 .r{ color:#7c5cf0; }
+  .level-card.c3 .r{ color:#e08c0b; }
+  .level-card.c4 .r{ color:#db2777; }
+  .level-card.c5 .r{ color:#0d9488; }
+  .level-card.c6 .r{ color:#16a34a; }
+  .level-card.c7 .r{ color:#92400e; }
+  .level-card.c8 .r{ color:#be123c; }
+
+  #resStars{
+    font-size: clamp(28px,5vw,52px);
+    letter-spacing:6px;
+    color:#fbbf24;
+    text-shadow: 0 3px 0 #f59e0b55;
+    line-height:1.1;
+    margin-bottom:4px;
+  }
+  #resStars .off{ color:#dbe3ec; text-shadow:none; }
+  #resTitle{ margin:0 0 10px; font-size: clamp(18px,2.8vw,28px); color:#0b4a75; }
+  .score-line{ font-size: clamp(13px,1.8vw,18px); color:#4a6076; margin-bottom:14px; }
+  .score-line b{
+    font-size: clamp(24px,4vw,40px);
+    color:#0b6fb8;
+    margin-left:6px;
+    vertical-align:-2px;
+  }
+  .stats{
+    display:flex; justify-content:center; gap: clamp(14px,4vw,50px);
+    margin-bottom:20px;
+  }
+  .stats div{ display:flex; flex-direction:column; align-items:center; }
+  .stats b{ font-size: clamp(18px,2.6vw,26px); color:#123152; }
+  .stats span{ font-size: clamp(10px,1.3vw,13px); color:#7b8fa8; margin-top:2px; }
+
+  .btns{ display:flex; gap: clamp(6px,1.4vw,14px); justify-content:center; flex-wrap:wrap; }
+  .btns button{
+    font-family:inherit;
+    font-size: clamp(12px,1.6vw,16px);
+    font-weight:800;
+    padding: clamp(8px,1.3vw,12px) clamp(14px,2.4vw,28px);
+    border-radius: 12px;
+    border:2px solid #d5e3f0;
+    background:#fff;
+    color:#39516b;
+    cursor:pointer;
+    transition: all .15s;
+  }
+  .btns button:hover{ transform: translateY(-2px); box-shadow:0 6px 16px rgba(11,74,117,.16); }
+  .btns button:active{ transform: translateY(0) scale(.97); }
+  .btns button.primary{
+    background: linear-gradient(160deg,#3ba9f5,#0b7fd4);
+    color:#fff; border-color: transparent;
+    box-shadow: 0 6px 18px rgba(11,127,212,.4);
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="hud-left">
+      <div id="hudLevel">第 1 關 · 水字部</div>
+      <div class="hud-bar"><div id="hudBar"></div></div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-score">得分 <b id="hudScore">0</b></div>
+      <div class="hud-badge">接 <i id="hudRadical">水</i> 的字</div>
+    </div>
+  </div>
+
+  <div id="menu" class="overlay">
+    <div class="panel">
+      <h1>部 首 大 冒 險</h1>
+      <p class="sub">接住對的字，躲開錯的字！</p>
+
+      <div class="rules">
+        🎮 <b>怎麼玩：</b><br>
+        1. 下面工具上寫著一個部首，那就是你這一關要「接住」的目標。<br>
+        2. 從上面掉下來帶這個部首的字 → <span class="tag">移動工具接住它 +10 分</span><br>
+        3. 掉下來其他部首的字 → <span class="tag2">把工具移開，不要接</span><br>
+        4. 接錯了字，或者目標字掉到地上 → <span class="tag2">−5 分</span><br>
+        5. 用滑鼠 / 手指拖動工具，也可以按鍵盤 ← → 移動。
+      </div>
+
+      <div class="levels" id="levelGrid"></div>
+    </div>
+  </div>
+
+  <div id="result" class="overlay hidden">
+    <div class="panel">
+      <div id="resStars">★★★</div>
+      <h2 id="resTitle">過關啦！</h2>
+      <div class="score-line">得分 <b id="resScore">0</b></div>
+      <div class="stats">
+        <div><b id="resCorrect">0</b><span>接對</span></div>
+        <div><b id="resWrong">0</b><span>接錯</span></div>
+        <div><b id="resMiss">0</b><span>漏掉</span></div>
+      </div>
+      <div class="btns">
+        <button id="btnRetry">再玩一次</button>
+        <button id="btnNext" class="primary">下一關</button>
+        <button id="btnMenu">返回選關</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const cvs = document.getElementById('game');
+  const ctx = cvs.getContext('2d');
+  const W = 900, H = 520;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cvs.width = W * dpr;
+  cvs.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const FONT = '"KaiTi","STKaiti","標楷體","DFKai-SB","PingFang TC","Microsoft JhengHei",sans-serif';
+
+  /* ---------- 版面 ---------- */
+  const GROUND_Y = 470;
+  const BASKET_TOP = 415;
+  const BASKET_BOTTOM = 500;
+  const BASKET_HALF_TOP = 66;
+  const BASKET_HALF_BOT = 48;
+  const MAX_FALLING = 3;
+
+  /* =========================================================
+     干擾字庫（以左右結構為主，不含各關目標部首）
+     ========================================================= */
+  const COMMON_OTHERS = [
+    '媽','姐','妹','她',
+    '吃','叫','嗎',
+    '明','時','晚','晴',
+    '跑','跳','路',
+    '貓','狗',
+    '地','場',
+    '玩','球',
+    '燈','燒',
+    '口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石'
+  ];
+
+  /* =========================================================
+     關卡資料（原形部首）
+     ========================================================= */
+  const LEVELS = [
+    {
+      name: '水字部', radical: '水', radicalName: '水字部',
+      color1: '#7ec8ff', color2: '#3d9bf0', stroke: '#2b7fd4',
+      fallSpeed: 108, interval: 2.0, total: 16,
+      targets: ['江','河','湖','海','洗','清','汗','池','沙','洋','流','活','沒','法','浪','汪'],
+      others: COMMON_OTHERS
+    },
+    {
+      name: '人字部', radical: '人', radicalName: '人字部',
+      color1: '#b9a5ff', color2: '#7c5cf0', stroke: '#6446c9',
+      fallSpeed: 112, interval: 1.9, total: 16,
+      targets: ['你','他','們','休','住','什','作','位','伙','伴','信','傳','借','使','化','件'],
+      others: COMMON_OTHERS
+    },
+    {
+      name: '手字部', radical: '手', radicalName: '手字部',
+      color1: '#ffd166', color2: '#f59e0b', stroke: '#c47d06',
+      fallSpeed: 116, interval: 1.8, total: 16,
+      targets: ['打','拉','把','找','拍','抱','掃','提','推','接','排','掛','換','捉','招','拾'],
+      others: COMMON_OTHERS
+    },
+    {
+      name: '心字部', radical: '心', radicalName: '心字部',
+      color1: '#ff9ec4', color2: '#ec4899', stroke: '#be185d',
+      fallSpeed: 120, interval: 1.8, total: 16,
+      targets: ['忙','快','怕','情','慢','恨','悄','性','想','思','念','意','忘','怎','急','您'],
+      others: COMMON_OTHERS
+    },
+    {
+      name: '言字部', radical: '言', radicalName: '言字部',
+      color1: '#5eead4', color2: '#0d9488', stroke: '#0f766e',
+      fallSpeed: 110, interval: 1.95, total: 16,
+      targets: ['說','話','語','詞','請','誰','謝','認','記','課','讀','講','論','談','訪','許'],
+      others: [
+        '媽','姐','妹','她','林','杯','板','吃','叫','嗎','明','時','晚','晴','紅','綠','紙','跑','跳','路','貓','狗','地','場','玩','球','燈','燒','口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石'
+      ]
+    },
+    {
+      name: '草字部', radical: '艸', radicalName: '草字部',
+      color1: '#86efac', color2: '#16a34a', stroke: '#15803d',
+      fallSpeed: 112, interval: 1.9, total: 16,
+      targets: ['花','草','菜','茶','葉','藥','藍','苦','英','落','萬','萱','蕾','萌','芽','苗'],
+      others: [
+        '媽','姐','妹','她','林','杯','板','吃','叫','嗎','明','時','晚','晴','紅','綠','紙','說','話','跑','跳','路','貓','狗','地','場','玩','球','燈','燒','口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石'
+      ]
+    },
+    {
+      name: '木字部', radical: '木', radicalName: '木字部',
+      color1: '#fcd34d', color2: '#92400e', stroke: '#78350f',
+      fallSpeed: 114, interval: 1.9, total: 16,
+      targets: ['林','村','板','杯','桃','梅','校','樹','根','枝','松','柏','橋','椅','桌','棵'],
+      others: [
+        '媽','姐','妹','她','吃','叫','嗎','明','時','晚','晴','紅','綠','紙','說','話','跑','跳','路','貓','狗','地','場','玩','球','燈','燒','口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石'
+      ]
+    },
+    {
+      name: '糸字部', radical: '糸', radicalName: '糸字部',
+      color1: '#fda4af', color2: '#be123c', stroke: '#9f1239',
+      fallSpeed: 116, interval: 1.85, total: 16,
+      targets: ['紅','綠','紙','線','織','結','給','練','約','紀','純','級','細','終','經','網'],
+      others: [
+        '媽','姐','妹','她','林','杯','板','吃','叫','嗎','明','時','晚','晴','說','話','跑','跳','路','貓','狗','地','場','玩','球','燈','燒','口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石'
+      ]
+    }
+  ];
+
+  /* =========================================================
+     狀態
+     ========================================================= */
+  let state = 'menu';
+  let levelIdx = 0;
+  let lv = LEVELS[0];
+
+  const basket = { x: 450, targetX: 450 };
+
+  let hanziList = [];
+  let particles = [];
+  let floaters = [];
+  let clouds = [];
+
+  let score = 0;
+  let spawnedCount = 0;
+  let spawnCooldown = 0;
+  let queue = [];
+  let targetPool = [], otherPool = [];
+  let ti = 0, oi = 0;
+  let targetTotal = 0;
+
+  let statCorrect = 0, statWrong = 0, statMissed = 0;
+
+  let finished = false;
+  let endTimer = 0;
+
+  let shakeT = 0;
+  let shakeMag = 8;
+  let flashAlpha = 0;
+  let flashColor = 'rgb(255,80,80)';
+
+  let elapsed = 0;
+
+  const keys = {};
+
+  /* =========================================================
+     工具
+     ========================================================= */
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+
+  function hit(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  let audioCtx = null;
+  function beep(freq, dur, type, vol) {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type || 'sine';
+      o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      g.gain.setValueAtTime(vol || 0.07, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start();
+      o.stop(audioCtx.currentTime + dur);
+    } catch (e) { }
+  }
+
+  /* ---------- 雲朵 ---------- */
+  for (let i = 0; i < 5; i++) {
+    clouds.push({
+      x: Math.random() * W,
+      y: 40 + Math.random() * 150,
+      s: 0.6 + Math.random() * 0.8,
+      sp: 8 + Math.random() * 16
+    });
+  }
+
+  /* =========================================================
+     出題隊列
+     ========================================================= */
+  function makeQueue(level) {
+    const n = level.total;
+    const tc = Math.round(n * 0.45);
+    const q = [];
+    for (let i = 0; i < n; i++) q.push(i < tc);
+    shuffle(q);
+
+    for (let i = 2; i < q.length; i++) {
+      if (q[i] === q[i - 1] && q[i] === q[i - 2]) {
+        for (let j = i + 1; j < q.length; j++) {
+          if (q[j] !== q[i]) {
+            const t = q[i]; q[i] = q[j]; q[j] = t;
+            break;
+          }
+        }
+      }
+    }
+    return q;
+  }
+
+  /* =========================================================
+     開始關卡
+     ========================================================= */
+  function startLevel(i) {
+    levelIdx = i;
+    lv = LEVELS[i];
+
+    score = 0;
+    spawnedCount = 0;
+    spawnCooldown = 1.6;
+    hanziList = [];
+    particles = [];
+    floaters = [];
+
+    statCorrect = 0;
+    statWrong = 0;
+    statMissed = 0;
+
+    finished = false;
+    endTimer = 0;
+
+    basket.x = 450;
+    basket.targetX = 450;
+
+    queue = makeQueue(lv);
+    targetTotal = queue.filter(Boolean).length;
+
+    targetPool = shuffle(lv.targets.slice());
+    otherPool = shuffle(lv.others.slice());
+    ti = 0; oi = 0;
+
+    shakeT = 0;
+    flashAlpha = 0;
+
+    state = 'playing';
+
+    document.getElementById('hud').classList.remove('hidden');
+    document.getElementById('menu').classList.add('hidden');
+    document.getElementById('result').classList.add('hidden');
+
+    document.getElementById('hudLevel').textContent = '第 ' + (i + 1) + ' 關 · ' + lv.name;
+    document.getElementById('hudRadical').textContent = lv.radical;
+    document.getElementById('hudScore').textContent = '0';
+    document.getElementById('hudBar').style.width = '0%';
+  }
+
+  /* =========================================================
+     生成漢字
+     ========================================================= */
+  function spawnHanzi() {
+    const isTarget = queue[spawnedCount];
+    let ch;
+    if (isTarget) {
+      ch = targetPool[ti % targetPool.length]; ti++;
+    } else {
+      ch = otherPool[oi % otherPool.length]; oi++;
+    }
+    hanziList.push({
+      char: ch,
+      isTarget: isTarget,
+      x: 110 + Math.random() * (W - 220),
+      y: -40,
+      phase: Math.random() * Math.PI * 2,
+      dead: false
+    });
+  }
+
+  /* =========================================================
+     特效
+     ========================================================= */
+  function burst(x, y, color, count) {
+    const n = count || 14;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 70 + Math.random() * 180;
+      particles.push({
+        x: x, y: y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 70,
+        life: 0.55 + Math.random() * 0.35,
+        max: 0.9,
+        color: color,
+        r: 3 + Math.random() * 4
+      });
+    }
+  }
+
+  function addFloater(x, y, text, color) {
+    floaters.push({ x: x, y: y, text: text, color: color, life: 1.0 });
+  }
+
+  function shake(power) {
+    shakeT = 0.28;
+    shakeMag = power || 8;
+  }
+
+  function flash(color, alpha) {
+    flashColor = color;
+    flashAlpha = alpha;
+  }
+
+  /* =========================================================
+     更新
+     ========================================================= */
+  function update(dt) {
+    elapsed += dt;
+
+    for (let i = 0; i < clouds.length; i++) {
+      const c = clouds[i];
+      c.x -= c.sp * dt;
+      if (c.x < -240) {
+        c.x = W + 240;
+        c.y = 40 + Math.random() * 150;
+        c.s = 0.6 + Math.random() * 0.8;
+      }
+    }
+
+    if (shakeT > 0) shakeT -= dt;
+    if (flashAlpha > 0) flashAlpha = Math.max(0, flashAlpha - dt * 2.4);
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.vy += 900 * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    for (let i = floaters.length - 1; i >= 0; i--) {
+      const f = floaters[i];
+      f.y -= 62 * dt;
+      f.life -= dt;
+      if (f.life <= 0) floaters.splice(i, 1);
+    }
+
+    if (state !== 'playing') return;
+
+    /* ---------- 工具移動 ---------- */
+    const keySpeed = 560;
+    if (keys['ArrowLeft'] || keys['a'] || keys['A']) basket.targetX -= keySpeed * dt;
+    if (keys['ArrowRight'] || keys['d'] || keys['D']) basket.targetX += keySpeed * dt;
+    basket.targetX = clamp(basket.targetX, BASKET_HALF_TOP, W - BASKET_HALF_TOP);
+    basket.x += (basket.targetX - basket.x) * Math.min(1, dt * 18);
+
+    /* ---------- 生成漢字（最多三個，時間錯開） ---------- */
+    if (spawnedCount < lv.total) {
+      if (spawnCooldown > 0) spawnCooldown -= dt;
+      if (spawnCooldown <= 0 && hanziList.length < MAX_FALLING) {
+        spawnHanzi();
+        spawnedCount++;
+        spawnCooldown = lv.interval + Math.random() * 1.2;
+      }
+    } else if (!finished && hanziList.length === 0) {
+      finished = true;
+      endTimer = 0.7;
+    }
+
+    if (finished) {
+      endTimer -= dt;
+      if (endTimer <= 0) {
+        endLevel();
+        return;
+      }
+    }
+
+    /* ---------- 工具接住區 ---------- */
+    const zone = {
+      x: basket.x - 62,
+      y: 435,
+      w: 124,
+      h: 52
+    };
+
+    /* ---------- 漢字下落 ---------- */
+    for (let i = hanziList.length - 1; i >= 0; i--) {
+      const h = hanziList[i];
+      h.y += lv.fallSpeed * dt;
+
+      const box = { x: h.x - 24, y: h.y - 54, w: 48, h: 54 };
+
+      if (!h.dead && hit(box, zone)) {
+        h.dead = true;
+        if (h.isTarget) {
+          score += 10;
+          statCorrect++;
+          burst(h.x, 445, '#4ade80', 18);
+          addFloater(h.x, 400, '+10', '#16a34a');
+          flash('rgb(120,255,170)', 0.16);
+          beep(880, 0.10, 'sine', 0.07);
+          setTimeout(() => beep(1180, 0.10, 'sine', 0.05), 70);
+        } else {
+          score -= 5;
+          statWrong++;
+          burst(h.x, 445, '#f87171', 18);
+          addFloater(h.x, 400, '−5', '#dc2626');
+          flash('rgb(255,90,90)', 0.28);
+          shake(10);
+          beep(180, 0.20, 'sawtooth', 0.06);
+        }
+      }
+
+      if (h.dead || h.y > 505) {
+        if (!h.dead && h.isTarget) {
+          score -= 5;
+          statMissed++;
+          addFloater(h.x, 430, '漏掉了 −5', '#dc2626');
+          flash('rgb(255,140,90)', 0.16);
+          beep(240, 0.16, 'triangle', 0.05);
+        }
+        hanziList.splice(i, 1);
+      }
+    }
+
+    updateHUD();
+  }
+
+  /* =========================================================
+     HUD
+     ========================================================= */
+  const hudScoreEl = document.getElementById('hudScore');
+  const hudBarEl = document.getElementById('hudBar');
+  let lastScoreShown = null;
+
+  function updateHUD() {
+    if (lastScoreShown !== score) {
+      hudScoreEl.textContent = score;
+      lastScoreShown = score;
+    }
+    const p = Math.min(1, spawnedCount / lv.total);
+    hudBarEl.style.width = (p * 100).toFixed(1) + '%';
+  }
+
+  /* =========================================================
+     關卡結束
+     ========================================================= */
+  function endLevel() {
+    state = 'result';
+
+    const maxScore = targetTotal * 10;
+    let stars = 0;
+    if (maxScore > 0) {
+      const r = score / maxScore;
+      if (r >= 0.85) stars = 3;
+      else if (r >= 0.6) stars = 2;
+      else if (r >= 0.3) stars = 1;
+    }
+
+    let starHTML = '';
+    for (let i = 0; i < 3; i++) {
+      starHTML += (i < stars) ? '★' : '<span class="off">★</span>';
+    }
+    document.getElementById('resStars').innerHTML = starHTML;
+
+    let title;
+    if (stars === 3) title = '太棒了！部首小達人！';
+    else if (stars === 2) title = '不錯哦，再接再厲！';
+    else if (stars === 1) title = '繼續加油！';
+    else title = '再試一次吧～';
+
+    document.getElementById('resTitle').textContent = title;
+    document.getElementById('resScore').textContent = score;
+    document.getElementById('resCorrect').textContent = statCorrect;
+    document.getElementById('resWrong').textContent = statWrong;
+    document.getElementById('resMiss').textContent = statMissed;
+
+    const btnNext = document.getElementById('btnNext');
+    if (levelIdx < LEVELS.length - 1) {
+      btnNext.style.display = '';
+      btnNext.textContent = '下一關';
+    } else {
+      btnNext.style.display = 'none';
+    }
+
+    document.getElementById('result').classList.remove('hidden');
+    document.getElementById('hud').classList.add('hidden');
+
+    if (stars === 3) {
+      beep(660, 0.12, 'sine', 0.07);
+      setTimeout(() => beep(880, 0.12, 'sine', 0.07), 120);
+      setTimeout(() => beep(1180, 0.22, 'sine', 0.07), 250);
+    } else {
+      beep(520, 0.14, 'sine', 0.06);
+      setTimeout(() => beep(400, 0.22, 'sine', 0.06), 140);
+    }
+  }
+
+  /* =========================================================
+     渲染
+     ========================================================= */
+  function drawBackground() {
+    const g = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+    g.addColorStop(0, '#bfe6ff');
+    g.addColorStop(1, '#eaf8ff');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, GROUND_Y);
+
+    ctx.fillStyle = 'rgba(255,240,170,0.55)';
+    ctx.beginPath(); ctx.arc(788, 92, 68, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,226,110,0.95)';
+    ctx.beginPath(); ctx.arc(788, 92, 46, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = 'rgba(168,214,255,0.55)';
+    ctx.beginPath();
+    ctx.moveTo(-40, GROUND_Y);
+    ctx.quadraticCurveTo(140, 300, 320, GROUND_Y);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(420, GROUND_Y);
+    ctx.quadraticCurveTo(640, 270, 900, GROUND_Y);
+    ctx.closePath(); ctx.fill();
+
+    const gg = ctx.createLinearGradient(0, GROUND_Y, 0, H);
+    gg.addColorStop(0, '#95dd8e');
+    gg.addColorStop(1, '#57b053');
+    ctx.fillStyle = gg;
+    ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+
+    ctx.fillStyle = '#b0eba8';
+    ctx.fillRect(0, GROUND_Y, W, 6);
+
+    ctx.strokeStyle = 'rgba(70,150,70,0.45)';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 26; i++) {
+      const x = (i * 71 + 20) % W;
+      const hgt = 9 + ((i * 37) % 9);
+      ctx.beginPath();
+      ctx.moveTo(x, GROUND_Y + 14);
+      ctx.quadraticCurveTo(x + 3, GROUND_Y + 14 - hgt * 0.6, x + 7, GROUND_Y + 14 - hgt);
+      ctx.stroke();
+    }
+  }
+
+  function drawClouds() {
+    for (let i = 0; i < clouds.length; i++) {
+      const c = clouds[i];
+      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+      const parts = [
+        [c.x, c.y, 26], [c.x + 30, c.y + 7, 19],
+        [c.x - 30, c.y + 9, 17], [c.x + 3, c.y - 15, 20]
+      ];
+      for (let k = 0; k < parts.length; k++) {
+        ctx.beginPath();
+        ctx.arc(parts[k][0], parts[k][1], parts[k][2] * c.s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  function drawHanzi() {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    for (let i = 0; i < hanziList.length; i++) {
+      const h = hanziList[i];
+      const y = h.y + Math.sin(elapsed * 2.5 + h.phase) * 2;
+
+      ctx.save();
+      ctx.font = '700 58px ' + FONT;
+      ctx.shadowColor = 'rgba(50,90,150,0.3)';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 4;
+      ctx.fillStyle = '#28324a';
+      ctx.fillText(h.char, h.x, y);
+      ctx.restore();
+    }
+  }
+
+  function drawBasket() {
+    const cx = basket.x;
+    const top = BASKET_TOP, bot = BASKET_BOTTOM;
+    const ht = BASKET_HALF_TOP, hb = BASKET_HALF_BOT;
+
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = '#0b2a44';
+    ctx.beginPath();
+    ctx.ellipse(cx, bot + 6, hb + 10, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.moveTo(cx - ht, top);
+    ctx.lineTo(cx + ht, top);
+    ctx.lineTo(cx + hb, bot);
+    ctx.lineTo(cx - hb, bot);
+    ctx.closePath();
+
+    const g = ctx.createLinearGradient(0, top, 0, bot);
+    g.addColorStop(0, lv.color1);
+    g.addColorStop(1, lv.color2);
+    ctx.fillStyle = g;
+    ctx.shadowColor = 'rgba(0,0,0,.25)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 5;
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+
+    ctx.strokeStyle = lv.stroke;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(cx, top, ht, 14, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,.92)';
+    ctx.fill();
+    ctx.strokeStyle = lv.stroke;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(cx, top + 3, ht - 10, 9, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,.13)';
+    ctx.fill();
+
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 44px ' + FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,.25)';
+    ctx.shadowBlur = 5;
+    ctx.fillText(lv.radical, cx, top + 50);
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life / p.max));
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawFloaters() {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i < floaters.length; i++) {
+      const f = floaters[i];
+      ctx.globalAlpha = Math.max(0, Math.min(1, f.life / 0.5));
+      ctx.font = '800 32px ' + FONT;
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.strokeText(f.text, f.x, f.y);
+      ctx.fillStyle = f.color;
+      ctx.fillText(f.text, f.x, f.y);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function render() {
+    ctx.save();
+
+    if (shakeT > 0) {
+      const m = shakeMag * (shakeT / 0.28);
+      ctx.translate((Math.random() - 0.5) * m, (Math.random() - 0.5) * m);
+    }
+
+    drawBackground();
+    drawClouds();
+
+    if (state === 'playing' || state === 'result') {
+      drawHanzi();
+      drawBasket();
+    }
+
+    drawParticles();
+    drawFloaters();
+
+    ctx.restore();
+
+    if (flashAlpha > 0) {
+      ctx.globalAlpha = flashAlpha;
+      ctx.fillStyle = flashColor;
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  /* =========================================================
+     主迴圈
+     ========================================================= */
+  let lastTime = 0;
+  function loop(t) {
+    if (!lastTime) lastTime = t;
+    let dt = (t - lastTime) / 1000;
+    lastTime = t;
+    if (dt > 0.05) dt = 0.05;
+
+    update(dt);
+    render();
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* =========================================================
+     輸入
+     ========================================================= */
+  function pointerX(e) {
+    const rect = cvs.getBoundingClientRect();
+    return clamp((e.clientX - rect.left) / rect.width * W, BASKET_HALF_TOP, W - BASKET_HALF_TOP);
+  }
+
+  cvs.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (err) { }
+    if (state === 'playing') basket.targetX = pointerX(e);
+  }, { passive: false });
+
+  cvs.addEventListener('pointermove', function (e) {
+    if (state !== 'playing') return;
+    e.preventDefault();
+    basket.targetX = pointerX(e);
+  }, { passive: false });
+
+  window.addEventListener('keydown', function (e) {
+    keys[e.key] = true;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+    }
+  });
+
+  window.addEventListener('keyup', function (e) {
+    keys[e.key] = false;
+  });
+
+  /* =========================================================
+     UI 綁定
+     ========================================================= */
+  (function buildLevelCards() {
+    const grid = document.getElementById('levelGrid');
+    LEVELS.forEach(function (level, i) {
+      const btn = document.createElement('button');
+      btn.className = 'level-card c' + (i + 1);
+      btn.innerHTML =
+        '<span class="r">' + level.radical + '</span>' +
+        '<span class="n">第' + (i + 1) + '關 ' + level.name + '</span>' +
+        '<span class="d">' + level.radicalName + '</span>';
+      btn.addEventListener('click', function () {
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+        } catch (err) { }
+        startLevel(i);
+      });
+      grid.appendChild(btn);
+    });
+  })();
+
+  document.getElementById('btnRetry').addEventListener('click', function () {
+    startLevel(levelIdx);
+  });
+
+  document.getElementById('btnNext').addEventListener('click', function () {
+    if (levelIdx < LEVELS.length - 1) startLevel(levelIdx + 1);
+  });
+
+  document.getElementById('btnMenu').addEventListener('click', function () {
+    state = 'menu';
+    document.getElementById('result').classList.add('hidden');
+    document.getElementById('hud').classList.add('hidden');
+    document.getElementById('menu').classList.remove('hidden');
+  });
+
+})();
+</script>
+</body>
+</html>
