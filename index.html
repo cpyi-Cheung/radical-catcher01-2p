@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>部首大冒險</title>
+<title>部首大冒險 · 雙人對戰</title>
 <style>
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{
@@ -14,8 +14,8 @@
   }
   #app{
     position:relative;
-    width: min(96vw, 900px, 150vh);
-    aspect-ratio: 900 / 520;
+    width: min(98vw, 1400px, 150vh);
+    aspect-ratio: 1400 / 800;
     border-radius:22px;
     overflow:hidden;
     background:#cfeaff;
@@ -25,112 +25,96 @@
   }
   #game{ display:block; width:100%; height:100%; touch-action:none; }
 
-  #hud{
-    position:absolute; inset:0 0 auto 0;
-    display:flex; justify-content:space-between; align-items:flex-start;
-    padding: clamp(8px,1.6%,18px) clamp(10px,2.2%,24px);
+  #dualHud{
+    position:absolute; top:0; left:0; right:0;
+    display:flex; justify-content:space-between; align-items:center;
+    padding: clamp(6px,1.2%,14px) clamp(12px,2.4%,28px);
     pointer-events:none;
     color:#123152;
     font-weight:800;
-    font-size: clamp(11px, 1.7vw, 16px);
+    font-size: clamp(12px,1.6vw,18px);
     text-shadow: 0 1px 0 rgba(255,255,255,.7);
     transition: opacity .3s;
+    z-index:6;
   }
-  #hud.hidden{ opacity:0; }
-  .hud-left{ display:flex; flex-direction:column; gap:6px; }
-  .hud-bar{
-    width: clamp(90px, 22vw, 200px); height:10px;
-    background: rgba(255,255,255,.65);
-    border-radius:6px; overflow:hidden;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,.12);
+  #dualHud.hidden{ opacity:0; }
+  .player-score{
+    display:flex; align-items:center; gap:12px;
+    background: rgba(255,255,255,.8);
+    backdrop-filter: blur(4px);
+    padding: 4px 18px; border-radius: 40px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.1);
   }
-  #hudBar{
-    height:100%; width:0%;
-    background: linear-gradient(90deg,#38bdf8,#0ea5e9);
-    border-radius:6px;
-    transition: width .18s ease-out;
+  .player-score .name{ font-size:1.1em; color:#0b4a75; }
+  .player-score .pts{ font-size:1.6em; color:#0b6fb8; min-width:2.2em; text-align:center; }
+  .vs{
+    font-size:1.4em; color:#eab308; text-shadow:0 2px 4px rgba(0,0,0,.2);
+    background:rgba(255,255,255,.5); padding:2px 16px; border-radius:30px;
   }
-  .hud-right{ display:flex; align-items:center; gap: clamp(8px,1.6vw,18px); }
-  .hud-score b{ font-size:1.3em; color:#0b6fb8; }
-  .hud-badge{
-    background: rgba(255,255,255,.85);
-    border-radius: 12px;
-    padding: 5px 12px;
-    display:flex; align-items:center; gap:7px;
-    box-shadow: 0 3px 10px rgba(0,0,0,.1);
-    white-space:nowrap;
-  }
-  .hud-badge i{
-    font-style:normal;
-    font-family:"KaiTi","STKaiti","標楷體",serif;
-    font-size:1.7em;
-    line-height:1;
-    color:#0b6fb8;
+  .player-level-tag{
+    font-size: clamp(10px,1.2vw,14px);
+    background:rgba(255,255,255,.7);
+    padding:2px 10px; border-radius:20px;
+    color:#39516b;
   }
 
   .overlay{
     position:absolute; inset:0;
     display:flex; align-items:center; justify-content:center;
     padding:3%;
-    background: rgba(8,22,40,.5);
+    background: rgba(8,22,40,.6);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
     transition: opacity .25s;
-    z-index:5;
+    z-index:10;
   }
   .overlay.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
 
   .panel{
     background: rgba(255,255,255,.97);
-    border-radius: 22px;
-    padding: clamp(14px,2.6vw,30px) clamp(16px,3vw,36px);
-    width:100%; max-width: 780px; max-height:100%;
+    border-radius: 28px;
+    padding: clamp(16px,2.8vw,36px) clamp(20px,3.2vw,44px);
+    width:100%; max-width: 850px; max-height:90%;
     overflow-y:auto;
     box-shadow: 0 20px 50px rgba(0,0,0,.4);
     text-align:center;
     color:#1e293b;
   }
   .panel h1{
-    margin:0 0 6px;
-    font-size: clamp(20px, 3.4vw, 34px);
-    letter-spacing:2px;
+    margin:0 0 4px;
+    font-size: clamp(24px, 3.8vw, 42px);
+    letter-spacing:4px;
     color:#0b4a75;
   }
-  .sub{ margin:0 0 14px; font-size: clamp(11px,1.6vw,15px); color:#5b7089; }
+  .sub{ margin:0 0 16px; font-size: clamp(12px,1.6vw,17px); color:#5b7089; }
 
   .rules{
     text-align:left;
     background:#f1f7fd;
-    border-radius:14px;
-    padding: clamp(8px,1.4vw,14px) clamp(12px,2vw,20px);
-    font-size: clamp(10.5px,1.45vw,14px);
+    border-radius:18px;
+    padding: clamp(10px,1.6vw,18px) clamp(14px,2.2vw,24px);
+    font-size: clamp(11px,1.4vw,15px);
     line-height:1.9;
     color:#39516b;
-    margin-bottom:16px;
+    margin-bottom:22px;
     border:1px solid #dbeafe;
   }
   .rules b{ color:#0b6fb8; }
-  .rules .tag{
-    display:inline-block; background:#dcfce7; color:#15803d;
-    border-radius:6px; padding:0 6px; font-weight:800;
-  }
-  .rules .tag2{
-    display:inline-block; background:#fee2e2; color:#b91c1c;
-    border-radius:6px; padding:0 6px; font-weight:800;
-  }
+  .rules .tag{ background:#dcfce7; color:#15803d; border-radius:6px; padding:0 6px; font-weight:800; }
+  .rules .tag2{ background:#fee2e2; color:#b91c1c; border-radius:6px; padding:0 6px; font-weight:800; }
 
   .levels{
     display:grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: clamp(6px,1.2vw,12px);
+    gap: clamp(8px,1.2vw,14px);
   }
-  @media (max-width: 640px){
+  @media (max-width: 700px){
     .levels{ grid-template-columns: repeat(2, 1fr); }
   }
   .level-card{
     border:none; cursor:pointer;
-    border-radius:16px;
-    padding: clamp(8px,1.6vw,16px) 6px;
+    border-radius:18px;
+    padding: clamp(10px,1.6vw,18px) 6px;
     background: linear-gradient(160deg,#ffffff,#eaf4ff);
     box-shadow: 0 4px 14px rgba(11,74,117,.12);
     border:2px solid transparent;
@@ -143,61 +127,66 @@
   .level-card .r{
     display:block;
     font-family:"KaiTi","STKaiti","標楷體",serif;
-    font-size: clamp(24px, 4.2vw, 42px);
+    font-size: clamp(26px, 4.2vw, 46px);
     font-weight:700;
     line-height:1.1;
     margin-bottom:2px;
   }
-  .level-card .n{ display:block; font-size: clamp(10px,1.4vw,14px); font-weight:800; }
-  .level-card .d{ display:block; font-size: clamp(8px,1.1vw,11px); color:#7b8fa8; margin-top:2px; }
-  .level-card.c1 .r{ color:#2b8fe0; }
-  .level-card.c2 .r{ color:#7c5cf0; }
-  .level-card.c3 .r{ color:#e08c0b; }
-  .level-card.c4 .r{ color:#db2777; }
-  .level-card.c5 .r{ color:#0d9488; }
-  .level-card.c6 .r{ color:#16a34a; }
-  .level-card.c7 .r{ color:#92400e; }
-  .level-card.c8 .r{ color:#be123c; }
+  .level-card .n{ display:block; font-size: clamp(11px,1.4vw,15px); font-weight:800; }
+  .level-card .d{ display:block; font-size: clamp(9px,1.1vw,12px); color:#7b8fa8; margin-top:2px; }
+  .level-card.c1 .r{ color:#2b8fe0; } .level-card.c2 .r{ color:#7c5cf0; }
+  .level-card.c3 .r{ color:#e08c0b; } .level-card.c4 .r{ color:#db2777; }
+  .level-card.c5 .r{ color:#0d9488; } .level-card.c6 .r{ color:#16a34a; }
+  .level-card.c7 .r{ color:#92400e; } .level-card.c8 .r{ color:#be123c; }
 
-  #resStars{
-    font-size: clamp(28px,5vw,52px);
-    letter-spacing:6px;
-    color:#fbbf24;
-    text-shadow: 0 3px 0 #f59e0b55;
-    line-height:1.1;
-    margin-bottom:4px;
+  .vs-result{
+    display:flex; justify-content:space-around; align-items:center;
+    margin: 10px 0 20px;
+    gap: 10px;
   }
-  #resStars .off{ color:#dbe3ec; text-shadow:none; }
-  #resTitle{ margin:0 0 10px; font-size: clamp(18px,2.8vw,28px); color:#0b4a75; }
-  .score-line{ font-size: clamp(13px,1.8vw,18px); color:#4a6076; margin-bottom:14px; }
-  .score-line b{
-    font-size: clamp(24px,4vw,40px);
-    color:#0b6fb8;
-    margin-left:6px;
-    vertical-align:-2px;
+  .vs-side{
+    flex:1; padding: 12px 8px; border-radius: 20px;
+    background: #f8fafc;
+    box-shadow: inset 0 1px 8px rgba(0,0,0,.03);
   }
-  .stats{
-    display:flex; justify-content:center; gap: clamp(14px,4vw,50px);
-    margin-bottom:20px;
+  .vs-side.winner{
+    background: #fef9c3;
+    box-shadow: 0 0 0 3px #facc15, 0 8px 20px rgba(250,204,21,.3);
   }
-  .stats div{ display:flex; flex-direction:column; align-items:center; }
-  .stats b{ font-size: clamp(18px,2.6vw,26px); color:#123152; }
-  .stats span{ font-size: clamp(10px,1.3vw,13px); color:#7b8fa8; margin-top:2px; }
+  .vs-side .name-big{ font-size: 1.5em; font-weight: 900; color:#0b4a75; }
+  .vs-side .score-big{ font-size: 2.6em; font-weight: 900; color:#0b6fb8; margin: 4px 0; }
+  .vs-side .detail{ font-size: 0.9em; color: #64748b; }
 
-  .btns{ display:flex; gap: clamp(6px,1.4vw,14px); justify-content:center; flex-wrap:wrap; }
+  .center-vs{
+    font-size: 2.2em; font-weight: 900; color: #eab308;
+    text-shadow: 0 2px 0 #b45309;
+  }
+
+  .encourage{
+    font-size: clamp(16px,2.2vw,24px);
+    margin: 16px 0 8px;
+    padding: 12px;
+    background: #dbeafe;
+    border-radius: 40px;
+    color: #1e3a8a;
+    font-weight: 800;
+  }
+
+  .btns{ display:flex; gap: clamp(8px,1.4vw,18px); justify-content:center; flex-wrap:wrap; margin-top: 18px; }
   .btns button{
     font-family:inherit;
-    font-size: clamp(12px,1.6vw,16px);
+    font-size: clamp(13px,1.6vw,18px);
     font-weight:800;
-    padding: clamp(8px,1.3vw,12px) clamp(14px,2.4vw,28px);
-    border-radius: 12px;
+    padding: clamp(8px,1.3vw,14px) clamp(18px,2.6vw,34px);
+    border-radius: 40px;
     border:2px solid #d5e3f0;
     background:#fff;
     color:#39516b;
     cursor:pointer;
     transition: all .15s;
+    box-shadow: 0 4px 10px rgba(0,0,0,.05);
   }
-  .btns button:hover{ transform: translateY(-2px); box-shadow:0 6px 16px rgba(11,74,117,.16); }
+  .btns button:hover{ transform: translateY(-2px); box-shadow:0 8px 18px rgba(11,74,117,.16); }
   .btns button:active{ transform: translateY(0) scale(.97); }
   .btns button.primary{
     background: linear-gradient(160deg,#3ba9f5,#0b7fd4);
@@ -211,29 +200,34 @@
 <div id="app">
   <canvas id="game"></canvas>
 
-  <div id="hud" class="hidden">
-    <div class="hud-left">
-      <div id="hudLevel">第 1 關 · 水字部</div>
-      <div class="hud-bar"><div id="hudBar"></div></div>
+  <div id="dualHud" class="hidden">
+    <div class="player-score">
+      <span class="name">🧑‍🎓 玩家 1</span>
+      <span class="pts" id="p1Score">0</span>
+      <span class="player-level-tag" id="p1LevelTag">水</span>
     </div>
-    <div class="hud-right">
-      <div class="hud-score">得分 <b id="hudScore">0</b></div>
-      <div class="hud-badge">接 <i id="hudRadical">水</i> 的字</div>
+    <div class="vs">VS</div>
+    <div class="player-score">
+      <span class="player-level-tag" id="p2LevelTag">水</span>
+      <span class="pts" id="p2Score">0</span>
+      <span class="name">玩家 2 🧑‍🎓</span>
     </div>
   </div>
 
   <div id="menu" class="overlay">
     <div class="panel">
-      <h1>部 首 大 冒 險</h1>
-      <p class="sub">接住對的字，躲開錯的字！</p>
+      <h1>部 首 大 冒 險 · 雙 人 對 戰</h1>
+      <p class="sub">兩人同時闖關，左右分工，看誰接得準！</p>
 
       <div class="rules">
-        🎮 <b>怎麼玩：</b><br>
-        1. 下面工具上寫著一個部首，那就是你這一關要「接住」的目標。<br>
-        2. 從上面掉下來帶這個部首的字 → <span class="tag">移動工具接住它 +10 分</span><br>
-        3. 掉下來其他部首的字 → <span class="tag2">把工具移開，不要接</span><br>
-        4. 接錯了字，或者目標字掉到地上 → <span class="tag2">−5 分</span><br>
-        5. 用滑鼠 / 手指拖動工具，也可以按鍵盤 ← → 移動。
+        🎮 <b>雙人玩法：</b><br>
+        1. 左半邊是 <b>玩家 1</b>（操作：<b>A / D</b> 鍵 或 拖動左側籃子）<br>
+        2. 右半邊是 <b>玩家 2</b>（操作：<b>← / →</b> 鍵 或 拖動右側籃子）<br>
+        3. 兩人各自接住自己區域內「正確部首」的字 → <span class="tag">+10 分</span><br>
+        4. 接錯字或漏接目標字 → <span class="tag2">−5 分</span><br>
+        5. 同一關卡，兩邊出現的字完全相同，只是順序不同！<br>
+        6. 干擾字以「左右結構」為主，需仔細辨認部首！<br>
+        7. 平板可直接用手指拖動自己那一側的籃子。
       </div>
 
       <div class="levels" id="levelGrid"></div>
@@ -242,14 +236,9 @@
 
   <div id="result" class="overlay hidden">
     <div class="panel">
-      <div id="resStars">★★★</div>
-      <h2 id="resTitle">過關啦！</h2>
-      <div class="score-line">得分 <b id="resScore">0</b></div>
-      <div class="stats">
-        <div><b id="resCorrect">0</b><span>接對</span></div>
-        <div><b id="resWrong">0</b><span>接錯</span></div>
-        <div><b id="resMiss">0</b><span>漏掉</span></div>
-      </div>
+      <h2 style="margin:0 0 6px; color:#0b4a75;">🏆 對戰結果</h2>
+      <div class="vs-result" id="vsResultArea"></div>
+      <div id="encourageMsg" class="encourage">別灰心，繼續加油！</div>
       <div class="btns">
         <button id="btnRetry">再玩一次</button>
         <button id="btnNext" class="primary">下一關</button>
@@ -265,7 +254,7 @@
 
   const cvs = document.getElementById('game');
   const ctx = cvs.getContext('2d');
-  const W = 900, H = 520;
+  const W = 1400, H = 800;
 
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   cvs.width = W * dpr;
@@ -274,148 +263,155 @@
 
   const FONT = '"KaiTi","STKaiti","標楷體","DFKai-SB","PingFang TC","Microsoft JhengHei",sans-serif';
 
-  /* ---------- 版面 ---------- */
-  const GROUND_Y = 470;
-  const BASKET_TOP = 415;
-  const BASKET_BOTTOM = 500;
-  const BASKET_HALF_TOP = 66;
-  const BASKET_HALF_BOT = 48;
+  const GROUND_Y = 700;
+  const BASKET_TOP = 620;
+  const BASKET_BOTTOM = 730;
+  const BASKET_HALF_TOP = 72;
+  const BASKET_HALF_BOT = 52;
   const MAX_FALLING = 3;
+  const MID_X = 700;
+
+  const TARGET_RATIO = 0.65;
 
   /* =========================================================
-     干擾字庫（以左右結構為主，不含各關目標部首）
+     干擾字庫：以「左右結構」為主，少量整體字
      ========================================================= */
-  const COMMON_OTHERS = [
-    '媽','姐','妹','她',
-    '吃','叫','嗎',
-    '明','時','晚','晴',
-    '跑','跳','路',
-    '貓','狗',
-    '地','場',
-    '玩','球',
-    '燈','燒',
-    '口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石'
+
+  // 【左右結構】干擾字（部首與各關目標不同，但字形為左右結構）
+  const LEFT_RIGHT_OTHERS = [
+    // 女部 / 人部 / 手部 / 口部 等常見左右結構
+    '媽','姐','妹','她','奶','妙','姓','始',
+    '你','他','們','休','住','什','作','位','伙','伴','信','傳','借','使','化','件',
+    '吃','叫','嗎','吧','呀','味','命','和',
+    '跑','跳','路','跟','足','踢','踩',
+    '貓','狗','豬','狼','狐','猴',
+    '地','場','城','培','基','堅',
+    '玩','球','現','理','環','班',
+    '燈','燒','炮','煙','煩','熱',
+    '紙','紅','綠','線','織','結','給','練','約','紀','純','級','細','終','經','網',
+    '說','話','語','詞','請','誰','謝','認','記','課','讀','講','論','談','訪','許',
+    '明','時','晚','晴','暗','暖','暢',
+    '林','村','板','杯','桃','梅','校','樹','根','枝','松','柏','橋','椅','桌','棵',
+    '江','河','湖','海','洗','清','汗','池','沙','洋','流','活','沒','法','浪','汪',
+    '打','拉','把','找','拍','抱','掃','提','推','接','排','掛','換','捉','招','拾',
+    '忙','快','怕','情','慢','恨','悄','性',
+    '媽','姐','妹','她','奶','妙','姓','始',
+    '燈','燒','炮','煙','煩','熱',
+    '說','話','語','詞','請','誰','謝','認','記','課','讀','講','論','談','訪','許'
+  ];
+
+  // 【整體字】少量保留（上下結構、包圍結構、獨體字）
+  const WHOLE_OTHERS = [
+    '口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石',
+    '花','草','菜','茶','葉','藥','藍','苦','英','落','萬','萱','蕾','萌','芽','苗',
+    '想','思','念','意','忘','怎','急','您',
+    '休','體','會','合','命','令'
   ];
 
   /* =========================================================
-     關卡資料（原形部首）
+     關卡資料（每關干擾字使用「左右結構為主 + 少量整體字」）
      ========================================================= */
   const LEVELS = [
     {
       name: '水字部', radical: '水', radicalName: '水字部',
       color1: '#7ec8ff', color2: '#3d9bf0', stroke: '#2b7fd4',
-      fallSpeed: 108, interval: 2.0, total: 16,
+      fallSpeed: 155, interval: 1.5, total: 16,
       targets: ['江','河','湖','海','洗','清','汗','池','沙','洋','流','活','沒','法','浪','汪'],
-      others: COMMON_OTHERS
+      others: LEFT_RIGHT_OTHERS
     },
     {
       name: '人字部', radical: '人', radicalName: '人字部',
       color1: '#b9a5ff', color2: '#7c5cf0', stroke: '#6446c9',
-      fallSpeed: 112, interval: 1.9, total: 16,
+      fallSpeed: 160, interval: 1.45, total: 16,
       targets: ['你','他','們','休','住','什','作','位','伙','伴','信','傳','借','使','化','件'],
-      others: COMMON_OTHERS
+      others: LEFT_RIGHT_OTHERS
     },
     {
       name: '手字部', radical: '手', radicalName: '手字部',
       color1: '#ffd166', color2: '#f59e0b', stroke: '#c47d06',
-      fallSpeed: 116, interval: 1.8, total: 16,
+      fallSpeed: 165, interval: 1.4, total: 16,
       targets: ['打','拉','把','找','拍','抱','掃','提','推','接','排','掛','換','捉','招','拾'],
-      others: COMMON_OTHERS
+      others: LEFT_RIGHT_OTHERS
     },
     {
       name: '心字部', radical: '心', radicalName: '心字部',
       color1: '#ff9ec4', color2: '#ec4899', stroke: '#be185d',
-      fallSpeed: 120, interval: 1.8, total: 16,
+      fallSpeed: 170, interval: 1.4, total: 16,
       targets: ['忙','快','怕','情','慢','恨','悄','性','想','思','念','意','忘','怎','急','您'],
-      others: COMMON_OTHERS
+      others: LEFT_RIGHT_OTHERS
     },
     {
       name: '言字部', radical: '言', radicalName: '言字部',
       color1: '#5eead4', color2: '#0d9488', stroke: '#0f766e',
-      fallSpeed: 110, interval: 1.95, total: 16,
+      fallSpeed: 158, interval: 1.5, total: 16,
       targets: ['說','話','語','詞','請','誰','謝','認','記','課','讀','講','論','談','訪','許'],
-      others: [
-        '媽','姐','妹','她','林','杯','板','吃','叫','嗎','明','時','晚','晴','紅','綠','紙','跑','跳','路','貓','狗','地','場','玩','球','燈','燒','口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石'
-      ]
+      others: LEFT_RIGHT_OTHERS
     },
     {
       name: '草字部', radical: '艸', radicalName: '草字部',
       color1: '#86efac', color2: '#16a34a', stroke: '#15803d',
-      fallSpeed: 112, interval: 1.9, total: 16,
+      fallSpeed: 160, interval: 1.5, total: 16,
       targets: ['花','草','菜','茶','葉','藥','藍','苦','英','落','萬','萱','蕾','萌','芽','苗'],
-      others: [
-        '媽','姐','妹','她','林','杯','板','吃','叫','嗎','明','時','晚','晴','紅','綠','紙','說','話','跑','跳','路','貓','狗','地','場','玩','球','燈','燒','口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石'
-      ]
+      others: LEFT_RIGHT_OTHERS
     },
     {
       name: '木字部', radical: '木', radicalName: '木字部',
       color1: '#fcd34d', color2: '#92400e', stroke: '#78350f',
-      fallSpeed: 114, interval: 1.9, total: 16,
+      fallSpeed: 162, interval: 1.5, total: 16,
       targets: ['林','村','板','杯','桃','梅','校','樹','根','枝','松','柏','橋','椅','桌','棵'],
-      others: [
-        '媽','姐','妹','她','吃','叫','嗎','明','時','晚','晴','紅','綠','紙','說','話','跑','跳','路','貓','狗','地','場','玩','球','燈','燒','口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石'
-      ]
+      others: LEFT_RIGHT_OTHERS
     },
     {
       name: '糸字部', radical: '糸', radicalName: '糸字部',
       color1: '#fda4af', color2: '#be123c', stroke: '#9f1239',
-      fallSpeed: 116, interval: 1.85, total: 16,
+      fallSpeed: 165, interval: 1.45, total: 16,
       targets: ['紅','綠','紙','線','織','結','給','練','約','紀','純','級','細','終','經','網'],
-      others: [
-        '媽','姐','妹','她','林','杯','板','吃','叫','嗎','明','時','晚','晴','說','話','跑','跳','路','貓','狗','地','場','玩','球','燈','燒','口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石'
-      ]
+      others: LEFT_RIGHT_OTHERS
     }
   ];
 
-  /* =========================================================
-     狀態
-     ========================================================= */
   let state = 'menu';
   let levelIdx = 0;
   let lv = LEVELS[0];
 
-  const basket = { x: 450, targetX: 450 };
+  const p1Basket = { x: 350, targetX: 350 };
+  const p2Basket = { x: 1050, targetX: 1050 };
 
   let hanziList = [];
   let particles = [];
   let floaters = [];
   let clouds = [];
 
-  let score = 0;
+  let p1Score = 0, p2Score = 0;
+  let p1Correct = 0, p1Wrong = 0, p1Missed = 0;
+  let p2Correct = 0, p2Wrong = 0, p2Missed = 0;
+
   let spawnedCount = 0;
   let spawnCooldown = 0;
-  let queue = [];
-  let targetPool = [], otherPool = [];
-  let ti = 0, oi = 0;
-  let targetTotal = 0;
 
-  let statCorrect = 0, statWrong = 0, statMissed = 0;
+  let p1Sequence = [];
+  let p2Sequence = [];
+  let p1Idx = 0, p2Idx = 0;
 
   let finished = false;
   let endTimer = 0;
 
   let shakeT = 0;
-  let shakeMag = 8;
+  let shakeMag = 6;
   let flashAlpha = 0;
   let flashColor = 'rgb(255,80,80)';
 
   let elapsed = 0;
-
   const keys = {};
 
-  /* =========================================================
-     工具
-     ========================================================= */
   function shuffle(a) {
     for (let i = a.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      const t = a[i]; a[i] = a[j]; a[j] = t;
+      [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
   }
-
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
-
   function hit(a, b) {
     return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
   }
@@ -429,7 +425,7 @@
       const g = audioCtx.createGain();
       o.type = type || 'sine';
       o.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      g.gain.setValueAtTime(vol || 0.07, audioCtx.currentTime);
+      g.gain.setValueAtTime(vol || 0.06, audioCtx.currentTime);
       g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
       o.connect(g); g.connect(audioCtx.destination);
       o.start();
@@ -437,154 +433,175 @@
     } catch (e) { }
   }
 
-  /* ---------- 雲朵 ---------- */
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 7; i++) {
     clouds.push({
       x: Math.random() * W,
-      y: 40 + Math.random() * 150,
-      s: 0.6 + Math.random() * 0.8,
-      sp: 8 + Math.random() * 16
+      y: 60 + Math.random() * 200,
+      s: 0.5 + Math.random() * 0.9,
+      sp: 10 + Math.random() * 18
     });
   }
 
   /* =========================================================
-     出題隊列
+     建立題目序列
+     - 目標字使用 targetPool
+     - 干擾字：80% 左右結構、20% 整體字（增加難度）
      ========================================================= */
-  function makeQueue(level) {
+  function buildSequence(level) {
     const n = level.total;
-    const tc = Math.round(n * 0.45);
-    const q = [];
-    for (let i = 0; i < n; i++) q.push(i < tc);
-    shuffle(q);
+    const tc = Math.round(n * TARGET_RATIO);
 
-    for (let i = 2; i < q.length; i++) {
-      if (q[i] === q[i - 1] && q[i] === q[i - 2]) {
-        for (let j = i + 1; j < q.length; j++) {
-          if (q[j] !== q[i]) {
-            const t = q[i]; q[i] = q[j]; q[j] = t;
+    const targetPool = shuffle(level.targets.slice());
+
+    // 干擾字池：80% 左右結構 + 20% 整體字
+    const lrPool = shuffle(LEFT_RIGHT_OTHERS.slice());
+    const wholePool = shuffle(WHOLE_OTHERS.slice());
+    const otherPool = [];
+    const oc = n - tc;  // 干擾字數量
+    const lrCount = Math.round(oc * 0.8);  // 左右結構佔 80%
+    for (let i = 0; i < lrCount; i++) {
+      otherPool.push(lrPool[i % lrPool.length]);
+    }
+    for (let i = 0; i < oc - lrCount; i++) {
+      otherPool.push(wholePool[i % wholePool.length]);
+    }
+    shuffle(otherPool);
+
+    const typeQueue = [];
+    for (let i = 0; i < n; i++) typeQueue.push(i < tc);
+    shuffle(typeQueue);
+    for (let i = 2; i < typeQueue.length; i++) {
+      if (typeQueue[i] === typeQueue[i-1] && typeQueue[i] === typeQueue[i-2]) {
+        for (let j = i+1; j < typeQueue.length; j++) {
+          if (typeQueue[j] !== typeQueue[i]) {
+            [typeQueue[i], typeQueue[j]] = [typeQueue[j], typeQueue[i]];
             break;
           }
         }
       }
     }
-    return q;
+
+    let ti = 0, oi = 0;
+    const seq = [];
+    for (let i = 0; i < n; i++) {
+      if (typeQueue[i]) {
+        seq.push({ char: targetPool[ti % targetPool.length], isTarget: true });
+        ti++;
+      } else {
+        seq.push({ char: otherPool[oi % otherPool.length], isTarget: false });
+        oi++;
+      }
+    }
+    return seq;
   }
 
-  /* =========================================================
-     開始關卡
-     ========================================================= */
   function startLevel(i) {
     levelIdx = i;
     lv = LEVELS[i];
 
-    score = 0;
+    p1Score = 0; p2Score = 0;
+    p1Correct = 0; p1Wrong = 0; p1Missed = 0;
+    p2Correct = 0; p2Wrong = 0; p2Missed = 0;
+
     spawnedCount = 0;
-    spawnCooldown = 1.6;
+    spawnCooldown = 1.2;
     hanziList = [];
     particles = [];
     floaters = [];
 
-    statCorrect = 0;
-    statWrong = 0;
-    statMissed = 0;
-
     finished = false;
     endTimer = 0;
 
-    basket.x = 450;
-    basket.targetX = 450;
+    p1Basket.x = 350; p1Basket.targetX = 350;
+    p2Basket.x = 1050; p2Basket.targetX = 1050;
 
-    queue = makeQueue(lv);
-    targetTotal = queue.filter(Boolean).length;
-
-    targetPool = shuffle(lv.targets.slice());
-    otherPool = shuffle(lv.others.slice());
-    ti = 0; oi = 0;
+    const baseSeq = buildSequence(lv);
+    p1Sequence = shuffle(baseSeq.slice());
+    p2Sequence = shuffle(baseSeq.slice());
+    p1Idx = 0;
+    p2Idx = 0;
 
     shakeT = 0;
     flashAlpha = 0;
 
     state = 'playing';
 
-    document.getElementById('hud').classList.remove('hidden');
+    document.getElementById('dualHud').classList.remove('hidden');
     document.getElementById('menu').classList.add('hidden');
     document.getElementById('result').classList.add('hidden');
 
-    document.getElementById('hudLevel').textContent = '第 ' + (i + 1) + ' 關 · ' + lv.name;
-    document.getElementById('hudRadical').textContent = lv.radical;
-    document.getElementById('hudScore').textContent = '0';
-    document.getElementById('hudBar').style.width = '0%';
+    document.getElementById('p1LevelTag').textContent = lv.radical;
+    document.getElementById('p2LevelTag').textContent = lv.radical;
+    document.getElementById('p1Score').textContent = '0';
+    document.getElementById('p2Score').textContent = '0';
   }
 
-  /* =========================================================
-     生成漢字
-     ========================================================= */
   function spawnHanzi() {
-    const isTarget = queue[spawnedCount];
-    let ch;
-    if (isTarget) {
-      ch = targetPool[ti % targetPool.length]; ti++;
-    } else {
-      ch = otherPool[oi % otherPool.length]; oi++;
+    let owner;
+    const p1Remaining = p1Sequence.length - p1Idx;
+    const p2Remaining = p2Sequence.length - p2Idx;
+
+    if (p1Remaining <= 0 && p2Remaining <= 0) return;
+    if (p1Remaining <= 0) owner = 2;
+    else if (p2Remaining <= 0) owner = 1;
+    else {
+      let c1 = 0, c2 = 0;
+      for (const h of hanziList) {
+        if (h.owner === 1) c1++;
+        else c2++;
+      }
+      if (c1 < c2) owner = 1;
+      else if (c2 < c1) owner = 2;
+      else owner = Math.random() < 0.5 ? 1 : 2;
     }
+
+    let item;
+    if (owner === 1) {
+      if (p1Idx >= p1Sequence.length) return;
+      item = p1Sequence[p1Idx]; p1Idx++;
+    } else {
+      if (p2Idx >= p2Sequence.length) return;
+      item = p2Sequence[p2Idx]; p2Idx++;
+    }
+
+    let xMin, xMax;
+    if (owner === 1) { xMin = 80; xMax = MID_X - 80; }
+    else { xMin = MID_X + 80; xMax = W - 80; }
+
     hanziList.push({
-      char: ch,
-      isTarget: isTarget,
-      x: 110 + Math.random() * (W - 220),
-      y: -40,
+      char: item.char,
+      isTarget: item.isTarget,
+      owner: owner,
+      x: xMin + Math.random() * (xMax - xMin),
+      y: -60,
       phase: Math.random() * Math.PI * 2,
       dead: false
     });
   }
 
-  /* =========================================================
-     特效
-     ========================================================= */
   function burst(x, y, color, count) {
-    const n = count || 14;
+    const n = count || 12;
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
-      const sp = 70 + Math.random() * 180;
+      const sp = 60 + Math.random() * 160;
       particles.push({
-        x: x, y: y,
-        vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp - 70,
-        life: 0.55 + Math.random() * 0.35,
-        max: 0.9,
-        color: color,
-        r: 3 + Math.random() * 4
+        x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60,
+        life: 0.5 + Math.random() * 0.3, max: 0.8, color, r: 2.5 + Math.random() * 3.5
       });
     }
   }
-
   function addFloater(x, y, text, color) {
-    floaters.push({ x: x, y: y, text: text, color: color, life: 1.0 });
+    floaters.push({ x, y, text, color, life: 0.9 });
   }
+  function shake(power) { shakeT = 0.25; shakeMag = power || 6; }
+  function flash(color, alpha) { flashColor = color; flashAlpha = alpha; }
 
-  function shake(power) {
-    shakeT = 0.28;
-    shakeMag = power || 8;
-  }
-
-  function flash(color, alpha) {
-    flashColor = color;
-    flashAlpha = alpha;
-  }
-
-  /* =========================================================
-     更新
-     ========================================================= */
   function update(dt) {
     elapsed += dt;
 
-    for (let i = 0; i < clouds.length; i++) {
-      const c = clouds[i];
+    for (let c of clouds) {
       c.x -= c.sp * dt;
-      if (c.x < -240) {
-        c.x = W + 240;
-        c.y = 40 + Math.random() * 150;
-        c.s = 0.6 + Math.random() * 0.8;
-      }
+      if (c.x < -240) { c.x = W + 240; c.y = 60 + Math.random() * 200; }
     }
 
     if (shakeT > 0) shakeT -= dt;
@@ -593,92 +610,84 @@
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
       p.vy += 900 * dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt;
       p.life -= dt;
       if (p.life <= 0) particles.splice(i, 1);
     }
-
     for (let i = floaters.length - 1; i >= 0; i--) {
       const f = floaters[i];
-      f.y -= 62 * dt;
-      f.life -= dt;
+      f.y -= 60 * dt; f.life -= dt;
       if (f.life <= 0) floaters.splice(i, 1);
     }
 
     if (state !== 'playing') return;
 
-    /* ---------- 工具移動 ---------- */
-    const keySpeed = 560;
-    if (keys['ArrowLeft'] || keys['a'] || keys['A']) basket.targetX -= keySpeed * dt;
-    if (keys['ArrowRight'] || keys['d'] || keys['D']) basket.targetX += keySpeed * dt;
-    basket.targetX = clamp(basket.targetX, BASKET_HALF_TOP, W - BASKET_HALF_TOP);
-    basket.x += (basket.targetX - basket.x) * Math.min(1, dt * 18);
+    const keySpeed = 650;
+    if (keys['a'] || keys['A']) p1Basket.targetX -= keySpeed * dt;
+    if (keys['d'] || keys['D']) p1Basket.targetX += keySpeed * dt;
+    p1Basket.targetX = clamp(p1Basket.targetX, BASKET_HALF_TOP + 20, MID_X - 50);
+    p1Basket.x += (p1Basket.targetX - p1Basket.x) * Math.min(1, dt * 16);
 
-    /* ---------- 生成漢字（最多三個，時間錯開） ---------- */
-    if (spawnedCount < lv.total) {
+    if (keys['ArrowLeft']) p2Basket.targetX -= keySpeed * dt;
+    if (keys['ArrowRight']) p2Basket.targetX += keySpeed * dt;
+    p2Basket.targetX = clamp(p2Basket.targetX, MID_X + 50, W - BASKET_HALF_TOP - 20);
+    p2Basket.x += (p2Basket.targetX - p2Basket.x) * Math.min(1, dt * 16);
+
+    const allSpawned = p1Idx >= p1Sequence.length && p2Idx >= p2Sequence.length;
+    if (!allSpawned) {
       if (spawnCooldown > 0) spawnCooldown -= dt;
-      if (spawnCooldown <= 0 && hanziList.length < MAX_FALLING) {
+      if (spawnCooldown <= 0 && hanziList.length < MAX_FALLING * 2) {
         spawnHanzi();
-        spawnedCount++;
-        spawnCooldown = lv.interval + Math.random() * 1.2;
+        spawnCooldown = lv.interval + Math.random() * 0.8;
       }
     } else if (!finished && hanziList.length === 0) {
       finished = true;
-      endTimer = 0.7;
+      endTimer = 0.6;
     }
 
     if (finished) {
       endTimer -= dt;
-      if (endTimer <= 0) {
-        endLevel();
-        return;
-      }
+      if (endTimer <= 0) { endLevel(); return; }
     }
 
-    /* ---------- 工具接住區 ---------- */
-    const zone = {
-      x: basket.x - 62,
-      y: 435,
-      w: 124,
-      h: 52
-    };
+    const zone1 = { x: p1Basket.x - 64, y: 640, w: 128, h: 52 };
+    const zone2 = { x: p2Basket.x - 64, y: 640, w: 128, h: 52 };
 
-    /* ---------- 漢字下落 ---------- */
     for (let i = hanziList.length - 1; i >= 0; i--) {
       const h = hanziList[i];
       h.y += lv.fallSpeed * dt;
 
-      const box = { x: h.x - 24, y: h.y - 54, w: 48, h: 54 };
+      const box = { x: h.x - 24, y: h.y - 56, w: 48, h: 56 };
+      const owner = h.owner;
+      const zone = owner === 1 ? zone1 : zone2;
 
       if (!h.dead && hit(box, zone)) {
         h.dead = true;
         if (h.isTarget) {
-          score += 10;
-          statCorrect++;
-          burst(h.x, 445, '#4ade80', 18);
-          addFloater(h.x, 400, '+10', '#16a34a');
-          flash('rgb(120,255,170)', 0.16);
-          beep(880, 0.10, 'sine', 0.07);
-          setTimeout(() => beep(1180, 0.10, 'sine', 0.05), 70);
+          if (owner === 1) { p1Score += 10; p1Correct++; }
+          else { p2Score += 10; p2Correct++; }
+          burst(h.x, 660, '#4ade80', 14);
+          addFloater(h.x, 590, '+10', '#16a34a');
+          flash('rgb(120,255,170)', 0.12);
+          beep(880, 0.10, 'sine', 0.06);
         } else {
-          score -= 5;
-          statWrong++;
-          burst(h.x, 445, '#f87171', 18);
-          addFloater(h.x, 400, '−5', '#dc2626');
-          flash('rgb(255,90,90)', 0.28);
-          shake(10);
-          beep(180, 0.20, 'sawtooth', 0.06);
+          if (owner === 1) { p1Score -= 5; p1Wrong++; }
+          else { p2Score -= 5; p2Wrong++; }
+          burst(h.x, 660, '#f87171', 14);
+          addFloater(h.x, 590, '−5', '#dc2626');
+          flash('rgb(255,90,90)', 0.22);
+          shake(6);
+          beep(180, 0.18, 'sawtooth', 0.05);
         }
       }
 
-      if (h.dead || h.y > 505) {
+      if (h.dead || h.y > 740) {
         if (!h.dead && h.isTarget) {
-          score -= 5;
-          statMissed++;
-          addFloater(h.x, 430, '漏掉了 −5', '#dc2626');
-          flash('rgb(255,140,90)', 0.16);
-          beep(240, 0.16, 'triangle', 0.05);
+          if (owner === 1) { p1Score -= 5; p1Missed++; }
+          else { p2Score -= 5; p2Missed++; }
+          addFloater(h.x, 620, '漏掉了 −5', '#dc2626');
+          flash('rgb(255,140,90)', 0.1);
+          beep(240, 0.14, 'triangle', 0.04);
         }
         hanziList.splice(i, 1);
       }
@@ -687,54 +696,46 @@
     updateHUD();
   }
 
-  /* =========================================================
-     HUD
-     ========================================================= */
-  const hudScoreEl = document.getElementById('hudScore');
-  const hudBarEl = document.getElementById('hudBar');
-  let lastScoreShown = null;
+  const p1ScoreEl = document.getElementById('p1Score');
+  const p2ScoreEl = document.getElementById('p2Score');
+  let lastP1 = null, lastP2 = null;
 
   function updateHUD() {
-    if (lastScoreShown !== score) {
-      hudScoreEl.textContent = score;
-      lastScoreShown = score;
-    }
-    const p = Math.min(1, spawnedCount / lv.total);
-    hudBarEl.style.width = (p * 100).toFixed(1) + '%';
+    if (lastP1 !== p1Score) { p1ScoreEl.textContent = p1Score; lastP1 = p1Score; }
+    if (lastP2 !== p2Score) { p2ScoreEl.textContent = p2Score; lastP2 = p2Score; }
   }
 
-  /* =========================================================
-     關卡結束
-     ========================================================= */
   function endLevel() {
     state = 'result';
 
-    const maxScore = targetTotal * 10;
-    let stars = 0;
-    if (maxScore > 0) {
-      const r = score / maxScore;
-      if (r >= 0.85) stars = 3;
-      else if (r >= 0.6) stars = 2;
-      else if (r >= 0.3) stars = 1;
+    const p1Win = p1Score > p2Score;
+    const p2Win = p2Score > p1Score;
+    const tie = p1Score === p2Score;
+
+    const area = document.getElementById('vsResultArea');
+    let html = `
+      <div class="vs-side ${p1Win ? 'winner' : ''}">
+        <div class="name-big">🧑‍🎓 玩家 1</div>
+        <div class="score-big">${p1Score}</div>
+        <div class="detail">接對 ${p1Correct} · 接錯 ${p1Wrong} · 漏接 ${p1Missed}</div>
+      </div>
+      <div class="center-vs">VS</div>
+      <div class="vs-side ${p2Win ? 'winner' : ''}">
+        <div class="name-big">玩家 2 🧑‍🎓</div>
+        <div class="score-big">${p2Score}</div>
+        <div class="detail">接對 ${p2Correct} · 接錯 ${p2Wrong} · 漏接 ${p2Missed}</div>
+      </div>
+    `;
+    area.innerHTML = html;
+
+    const encourage = document.getElementById('encourageMsg');
+    if (tie) {
+      encourage.textContent = '🤝 平手！你們都很棒，繼續加油！';
+    } else if (p1Win) {
+      encourage.textContent = '🎉 玩家 1 獲勝！玩家 2 別灰心，繼續加油！';
+    } else {
+      encourage.textContent = '🎉 玩家 2 獲勝！玩家 1 別灰心，繼續加油！';
     }
-
-    let starHTML = '';
-    for (let i = 0; i < 3; i++) {
-      starHTML += (i < stars) ? '★' : '<span class="off">★</span>';
-    }
-    document.getElementById('resStars').innerHTML = starHTML;
-
-    let title;
-    if (stars === 3) title = '太棒了！部首小達人！';
-    else if (stars === 2) title = '不錯哦，再接再厲！';
-    else if (stars === 1) title = '繼續加油！';
-    else title = '再試一次吧～';
-
-    document.getElementById('resTitle').textContent = title;
-    document.getElementById('resScore').textContent = score;
-    document.getElementById('resCorrect').textContent = statCorrect;
-    document.getElementById('resWrong').textContent = statWrong;
-    document.getElementById('resMiss').textContent = statMissed;
 
     const btnNext = document.getElementById('btnNext');
     if (levelIdx < LEVELS.length - 1) {
@@ -745,21 +746,18 @@
     }
 
     document.getElementById('result').classList.remove('hidden');
-    document.getElementById('hud').classList.add('hidden');
+    document.getElementById('dualHud').classList.add('hidden');
 
-    if (stars === 3) {
+    if (!tie) {
       beep(660, 0.12, 'sine', 0.07);
       setTimeout(() => beep(880, 0.12, 'sine', 0.07), 120);
-      setTimeout(() => beep(1180, 0.22, 'sine', 0.07), 250);
+      setTimeout(() => beep(1180, 0.2, 'sine', 0.07), 250);
     } else {
-      beep(520, 0.14, 'sine', 0.06);
-      setTimeout(() => beep(400, 0.22, 'sine', 0.06), 140);
+      beep(520, 0.15, 'sine', 0.06);
+      setTimeout(() => beep(520, 0.15, 'sine', 0.06), 150);
     }
   }
 
-  /* =========================================================
-     渲染
-     ========================================================= */
   function drawBackground() {
     const g = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
     g.addColorStop(0, '#bfe6ff');
@@ -768,18 +766,18 @@
     ctx.fillRect(0, 0, W, GROUND_Y);
 
     ctx.fillStyle = 'rgba(255,240,170,0.55)';
-    ctx.beginPath(); ctx.arc(788, 92, 68, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(1240, 120, 78, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'rgba(255,226,110,0.95)';
-    ctx.beginPath(); ctx.arc(788, 92, 46, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(1240, 120, 52, 0, Math.PI * 2); ctx.fill();
 
     ctx.fillStyle = 'rgba(168,214,255,0.55)';
     ctx.beginPath();
     ctx.moveTo(-40, GROUND_Y);
-    ctx.quadraticCurveTo(140, 300, 320, GROUND_Y);
+    ctx.quadraticCurveTo(200, 420, 480, GROUND_Y);
     ctx.closePath(); ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(420, GROUND_Y);
-    ctx.quadraticCurveTo(640, 270, 900, GROUND_Y);
+    ctx.moveTo(600, GROUND_Y);
+    ctx.quadraticCurveTo(900, 390, 1400, GROUND_Y);
     ctx.closePath(); ctx.fill();
 
     const gg = ctx.createLinearGradient(0, GROUND_Y, 0, H);
@@ -787,34 +785,29 @@
     gg.addColorStop(1, '#57b053');
     ctx.fillStyle = gg;
     ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
-
     ctx.fillStyle = '#b0eba8';
     ctx.fillRect(0, GROUND_Y, W, 6);
 
-    ctx.strokeStyle = 'rgba(70,150,70,0.45)';
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    for (let i = 0; i < 26; i++) {
-      const x = (i * 71 + 20) % W;
-      const hgt = 9 + ((i * 37) % 9);
-      ctx.beginPath();
-      ctx.moveTo(x, GROUND_Y + 14);
-      ctx.quadraticCurveTo(x + 3, GROUND_Y + 14 - hgt * 0.6, x + 7, GROUND_Y + 14 - hgt);
-      ctx.stroke();
-    }
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([14, 18]);
+    ctx.beginPath();
+    ctx.moveTo(MID_X, 80);
+    ctx.lineTo(MID_X, GROUND_Y - 10);
+    ctx.stroke();
+    ctx.restore();
   }
 
   function drawClouds() {
-    for (let i = 0; i < clouds.length; i++) {
-      const c = clouds[i];
+    for (let c of clouds) {
       ctx.fillStyle = 'rgba(255,255,255,0.88)';
       const parts = [
-        [c.x, c.y, 26], [c.x + 30, c.y + 7, 19],
-        [c.x - 30, c.y + 9, 17], [c.x + 3, c.y - 15, 20]
+        [c.x, c.y, 26], [c.x + 30, c.y + 8, 20], [c.x - 30, c.y + 10, 18], [c.x + 3, c.y - 16, 21]
       ];
-      for (let k = 0; k < parts.length; k++) {
+      for (let p of parts) {
         ctx.beginPath();
-        ctx.arc(parts[k][0], parts[k][1], parts[k][2] * c.s, 0, Math.PI * 2);
+        ctx.arc(p[0], p[1], p[2] * c.s, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -823,22 +816,20 @@
   function drawHanzi() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    for (let i = 0; i < hanziList.length; i++) {
-      const h = hanziList[i];
-      const y = h.y + Math.sin(elapsed * 2.5 + h.phase) * 2;
-
+    for (let h of hanziList) {
+      const y = h.y + Math.sin(elapsed * 2.5 + h.phase) * 3;
       ctx.save();
-      ctx.font = '700 58px ' + FONT;
-      ctx.shadowColor = 'rgba(50,90,150,0.3)';
+      ctx.font = '700 60px ' + FONT;
+      ctx.shadowColor = h.owner === 1 ? 'rgba(30,80,160,0.4)' : 'rgba(120,40,140,0.4)';
       ctx.shadowBlur = 12;
       ctx.shadowOffsetY = 4;
-      ctx.fillStyle = '#28324a';
+      ctx.fillStyle = h.owner === 1 ? '#1e3a8a' : '#4c1d95';
       ctx.fillText(h.char, h.x, y);
       ctx.restore();
     }
   }
 
-  function drawBasket() {
+  function drawBasket(basket, color1, color2, stroke, radical) {
     const cx = basket.x;
     const top = BASKET_TOP, bot = BASKET_BOTTOM;
     const ht = BASKET_HALF_TOP, hb = BASKET_HALF_BOT;
@@ -847,7 +838,7 @@
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = '#0b2a44';
     ctx.beginPath();
-    ctx.ellipse(cx, bot + 6, hb + 10, 11, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, bot + 8, hb + 10, 12, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
@@ -859,46 +850,45 @@
     ctx.closePath();
 
     const g = ctx.createLinearGradient(0, top, 0, bot);
-    g.addColorStop(0, lv.color1);
-    g.addColorStop(1, lv.color2);
+    g.addColorStop(0, color1);
+    g.addColorStop(1, color2);
     ctx.fillStyle = g;
-    ctx.shadowColor = 'rgba(0,0,0,.25)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 5;
+    ctx.shadowColor = 'rgba(0,0,0,.2)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetY = 6;
     ctx.fill();
     ctx.shadowColor = 'transparent';
 
-    ctx.strokeStyle = lv.stroke;
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 5;
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.ellipse(cx, top, ht, 14, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, top, ht, 15, 0, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255,255,255,.92)';
     ctx.fill();
-    ctx.strokeStyle = lv.stroke;
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 5;
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.ellipse(cx, top + 3, ht - 10, 9, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0,0,0,.13)';
+    ctx.ellipse(cx, top + 3, ht - 12, 10, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,.1)';
     ctx.fill();
 
     ctx.save();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '700 44px ' + FONT;
+    ctx.font = '700 46px ' + FONT;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0,0,0,.25)';
+    ctx.shadowColor = 'rgba(0,0,0,.3)';
     ctx.shadowBlur = 5;
-    ctx.fillText(lv.radical, cx, top + 50);
+    ctx.fillText(radical, cx, top + 56);
     ctx.restore();
   }
 
   function drawParticles() {
-    for (let i = 0; i < particles.length; i++) {
-      const p = particles[i];
+    for (let p of particles) {
       ctx.globalAlpha = Math.max(0, Math.min(1, p.life / p.max));
       ctx.fillStyle = p.color;
       ctx.beginPath();
@@ -911,8 +901,7 @@
   function drawFloaters() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    for (let i = 0; i < floaters.length; i++) {
-      const f = floaters[i];
+    for (let f of floaters) {
       ctx.globalAlpha = Math.max(0, Math.min(1, f.life / 0.5));
       ctx.font = '800 32px ' + FONT;
       ctx.lineWidth = 5;
@@ -926,9 +915,8 @@
 
   function render() {
     ctx.save();
-
     if (shakeT > 0) {
-      const m = shakeMag * (shakeT / 0.28);
+      const m = shakeMag * (shakeT / 0.25);
       ctx.translate((Math.random() - 0.5) * m, (Math.random() - 0.5) * m);
     }
 
@@ -937,7 +925,8 @@
 
     if (state === 'playing' || state === 'result') {
       drawHanzi();
-      drawBasket();
+      drawBasket(p1Basket, lv.color1, lv.color2, lv.stroke, lv.radical);
+      drawBasket(p2Basket, lv.color1, lv.color2, lv.stroke, lv.radical);
     }
 
     drawParticles();
@@ -953,9 +942,6 @@
     }
   }
 
-  /* =========================================================
-     主迴圈
-     ========================================================= */
   let lastTime = 0;
   function loop(t) {
     if (!lastTime) lastTime = t;
@@ -965,17 +951,13 @@
 
     update(dt);
     render();
-
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
 
-  /* =========================================================
-     輸入
-     ========================================================= */
-  function pointerX(e) {
+  function getCanvasX(e) {
     const rect = cvs.getBoundingClientRect();
-    return clamp((e.clientX - rect.left) / rect.width * W, BASKET_HALF_TOP, W - BASKET_HALF_TOP);
+    return clamp((e.clientX - rect.left) / rect.width * W, 0, W);
   }
 
   cvs.addEventListener('pointerdown', function (e) {
@@ -984,29 +966,36 @@
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
     } catch (err) { }
-    if (state === 'playing') basket.targetX = pointerX(e);
+    if (state !== 'playing') return;
+    const x = getCanvasX(e);
+    if (x < MID_X) {
+      p1Basket.targetX = clamp(x, BASKET_HALF_TOP + 20, MID_X - 50);
+    } else {
+      p2Basket.targetX = clamp(x, MID_X + 50, W - BASKET_HALF_TOP - 20);
+    }
   }, { passive: false });
 
   cvs.addEventListener('pointermove', function (e) {
     if (state !== 'playing') return;
     e.preventDefault();
-    basket.targetX = pointerX(e);
+    const x = getCanvasX(e);
+    if (x < MID_X) {
+      p1Basket.targetX = clamp(x, BASKET_HALF_TOP + 20, MID_X - 50);
+    } else {
+      p2Basket.targetX = clamp(x, MID_X + 50, W - BASKET_HALF_TOP - 20);
+    }
   }, { passive: false });
 
   window.addEventListener('keydown', function (e) {
     keys[e.key] = true;
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' ') {
+    if (['ArrowLeft','ArrowRight','a','A','d','D',' '].includes(e.key)) {
       e.preventDefault();
     }
   });
-
   window.addEventListener('keyup', function (e) {
     keys[e.key] = false;
   });
 
-  /* =========================================================
-     UI 綁定
-     ========================================================= */
   (function buildLevelCards() {
     const grid = document.getElementById('levelGrid');
     LEVELS.forEach(function (level, i) {
@@ -1030,15 +1019,13 @@
   document.getElementById('btnRetry').addEventListener('click', function () {
     startLevel(levelIdx);
   });
-
   document.getElementById('btnNext').addEventListener('click', function () {
     if (levelIdx < LEVELS.length - 1) startLevel(levelIdx + 1);
   });
-
   document.getElementById('btnMenu').addEventListener('click', function () {
     state = 'menu';
     document.getElementById('result').classList.add('hidden');
-    document.getElementById('hud').classList.add('hidden');
+    document.getElementById('dualHud').classList.add('hidden');
     document.getElementById('menu').classList.remove('hidden');
   });
 
