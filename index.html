@@ -25,6 +25,7 @@
   }
   #game{ display:block; width:100%; height:100%; touch-action:none; }
 
+  /* 雙人頂部分數條 */
   #dualHud{
     position:absolute; top:0; left:0; right:0;
     display:flex; justify-content:space-between; align-items:center;
@@ -276,10 +277,7 @@
   /* =========================================================
      干擾字庫：以「左右結構」為主，少量整體字
      ========================================================= */
-
-  // 【左右結構】干擾字（部首與各關目標不同，但字形為左右結構）
   const LEFT_RIGHT_OTHERS = [
-    // 女部 / 人部 / 手部 / 口部 等常見左右結構
     '媽','姐','妹','她','奶','妙','姓','始',
     '你','他','們','休','住','什','作','位','伙','伴','信','傳','借','使','化','件',
     '吃','叫','嗎','吧','呀','味','命','和',
@@ -294,79 +292,66 @@
     '林','村','板','杯','桃','梅','校','樹','根','枝','松','柏','橋','椅','桌','棵',
     '江','河','湖','海','洗','清','汗','池','沙','洋','流','活','沒','法','浪','汪',
     '打','拉','把','找','拍','抱','掃','提','推','接','排','掛','換','捉','招','拾',
-    '忙','快','怕','情','慢','恨','悄','性',
-    '媽','姐','妹','她','奶','妙','姓','始',
-    '燈','燒','炮','煙','煩','熱',
-    '說','話','語','詞','請','誰','謝','認','記','課','讀','講','論','談','訪','許'
+    '忙','快','怕','情','慢','恨','悄','性'
   ];
 
-  // 【整體字】少量保留（上下結構、包圍結構、獨體字）
   const WHOLE_OTHERS = [
     '口','山','月','田','馬','車','門','雲','雨','刀','女','子','大','小','上','下','天','石',
     '花','草','菜','茶','葉','藥','藍','苦','英','落','萬','萱','蕾','萌','芽','苗',
-    '想','思','念','意','忘','怎','急','您',
-    '休','體','會','合','命','令'
+    '想','思','念','意','忘','怎','急','您'
   ];
 
   /* =========================================================
-     關卡資料（每關干擾字使用「左右結構為主 + 少量整體字」）
+     關卡資料
      ========================================================= */
   const LEVELS = [
     {
       name: '水字部', radical: '水', radicalName: '水字部',
       color1: '#7ec8ff', color2: '#3d9bf0', stroke: '#2b7fd4',
       fallSpeed: 155, interval: 1.5, total: 16,
-      targets: ['江','河','湖','海','洗','清','汗','池','沙','洋','流','活','沒','法','浪','汪'],
-      others: LEFT_RIGHT_OTHERS
+      targets: ['江','河','湖','海','洗','清','汗','池','沙','洋','流','活','沒','法','浪','汪']
     },
     {
       name: '人字部', radical: '人', radicalName: '人字部',
       color1: '#b9a5ff', color2: '#7c5cf0', stroke: '#6446c9',
       fallSpeed: 160, interval: 1.45, total: 16,
-      targets: ['你','他','們','休','住','什','作','位','伙','伴','信','傳','借','使','化','件'],
-      others: LEFT_RIGHT_OTHERS
+      targets: ['你','他','們','休','住','什','作','位','伙','伴','信','傳','借','使','化','件']
     },
     {
       name: '手字部', radical: '手', radicalName: '手字部',
       color1: '#ffd166', color2: '#f59e0b', stroke: '#c47d06',
       fallSpeed: 165, interval: 1.4, total: 16,
-      targets: ['打','拉','把','找','拍','抱','掃','提','推','接','排','掛','換','捉','招','拾'],
-      others: LEFT_RIGHT_OTHERS
+      targets: ['打','拉','把','找','拍','抱','掃','提','推','接','排','掛','換','捉','招','拾']
     },
     {
       name: '心字部', radical: '心', radicalName: '心字部',
       color1: '#ff9ec4', color2: '#ec4899', stroke: '#be185d',
       fallSpeed: 170, interval: 1.4, total: 16,
-      targets: ['忙','快','怕','情','慢','恨','悄','性','想','思','念','意','忘','怎','急','您'],
-      others: LEFT_RIGHT_OTHERS
+      targets: ['忙','快','怕','情','慢','恨','悄','性','想','思','念','意','忘','怎','急','您']
     },
     {
       name: '言字部', radical: '言', radicalName: '言字部',
       color1: '#5eead4', color2: '#0d9488', stroke: '#0f766e',
       fallSpeed: 158, interval: 1.5, total: 16,
-      targets: ['說','話','語','詞','請','誰','謝','認','記','課','讀','講','論','談','訪','許'],
-      others: LEFT_RIGHT_OTHERS
+      targets: ['說','話','語','詞','請','誰','謝','認','記','課','讀','講','論','談','訪','許']
     },
     {
       name: '草字部', radical: '艸', radicalName: '草字部',
       color1: '#86efac', color2: '#16a34a', stroke: '#15803d',
       fallSpeed: 160, interval: 1.5, total: 16,
-      targets: ['花','草','菜','茶','葉','藥','藍','苦','英','落','萬','萱','蕾','萌','芽','苗'],
-      others: LEFT_RIGHT_OTHERS
+      targets: ['花','草','菜','茶','葉','藥','藍','苦','英','落','萬','萱','蕾','萌','芽','苗']
     },
     {
       name: '木字部', radical: '木', radicalName: '木字部',
       color1: '#fcd34d', color2: '#92400e', stroke: '#78350f',
       fallSpeed: 162, interval: 1.5, total: 16,
-      targets: ['林','村','板','杯','桃','梅','校','樹','根','枝','松','柏','橋','椅','桌','棵'],
-      others: LEFT_RIGHT_OTHERS
+      targets: ['林','村','板','杯','桃','梅','校','樹','根','枝','松','柏','橋','椅','桌','棵']
     },
     {
       name: '糸字部', radical: '糸', radicalName: '糸字部',
       color1: '#fda4af', color2: '#be123c', stroke: '#9f1239',
       fallSpeed: 165, interval: 1.45, total: 16,
-      targets: ['紅','綠','紙','線','織','結','給','練','約','紀','純','級','細','終','經','網'],
-      others: LEFT_RIGHT_OTHERS
+      targets: ['紅','綠','紙','線','織','結','給','練','約','紀','純','級','細','終','經','網']
     }
   ];
 
@@ -386,7 +371,6 @@
   let p1Correct = 0, p1Wrong = 0, p1Missed = 0;
   let p2Correct = 0, p2Wrong = 0, p2Missed = 0;
 
-  let spawnedCount = 0;
   let spawnCooldown = 0;
 
   let p1Sequence = [];
@@ -444,21 +428,25 @@
 
   /* =========================================================
      建立題目序列
-     - 目標字使用 targetPool
-     - 干擾字：80% 左右結構、20% 整體字（增加難度）
+     - 目標字 65%
+     - 干擾字 80% 左右結構 + 20% 整體字
+     - 排除該關目標字，避免重複
      ========================================================= */
   function buildSequence(level) {
     const n = level.total;
     const tc = Math.round(n * TARGET_RATIO);
 
+    // 目標字池：該關卡的所有目標字（可重複抽取以湊足數量）
     const targetPool = shuffle(level.targets.slice());
 
-    // 干擾字池：80% 左右結構 + 20% 整體字
-    const lrPool = shuffle(LEFT_RIGHT_OTHERS.slice());
-    const wholePool = shuffle(WHOLE_OTHERS.slice());
+    // 干擾字池：先排除與該關目標字重複的字
+    const targetSet = new Set(level.targets);
+    const lrPool = shuffle(LEFT_RIGHT_OTHERS.filter(c => !targetSet.has(c)));
+    const wholePool = shuffle(WHOLE_OTHERS.filter(c => !targetSet.has(c)));
+
+    const oc = n - tc;                     // 干擾字數量
+    const lrCount = Math.round(oc * 0.8);  // 80% 左右結構
     const otherPool = [];
-    const oc = n - tc;  // 干擾字數量
-    const lrCount = Math.round(oc * 0.8);  // 左右結構佔 80%
     for (let i = 0; i < lrCount; i++) {
       otherPool.push(lrPool[i % lrPool.length]);
     }
@@ -467,9 +455,11 @@
     }
     shuffle(otherPool);
 
+    // 建立 typeQueue：true = 目標字, false = 干擾字
     const typeQueue = [];
     for (let i = 0; i < n; i++) typeQueue.push(i < tc);
     shuffle(typeQueue);
+    // 避免連續 3 個同類型
     for (let i = 2; i < typeQueue.length; i++) {
       if (typeQueue[i] === typeQueue[i-1] && typeQueue[i] === typeQueue[i-2]) {
         for (let j = i+1; j < typeQueue.length; j++) {
@@ -503,7 +493,6 @@
     p1Correct = 0; p1Wrong = 0; p1Missed = 0;
     p2Correct = 0; p2Wrong = 0; p2Missed = 0;
 
-    spawnedCount = 0;
     spawnCooldown = 1.2;
     hanziList = [];
     particles = [];
@@ -515,6 +504,7 @@
     p1Basket.x = 350; p1Basket.targetX = 350;
     p2Basket.x = 1050; p2Basket.targetX = 1050;
 
+    // 兩份內容相同、順序不同的序列
     const baseSeq = buildSequence(lv);
     p1Sequence = shuffle(baseSeq.slice());
     p2Sequence = shuffle(baseSeq.slice());
@@ -545,10 +535,10 @@
     if (p1Remaining <= 0) owner = 2;
     else if (p2Remaining <= 0) owner = 1;
     else {
+      // 優先丟給畫面上較少的一邊，讓節奏更平均
       let c1 = 0, c2 = 0;
       for (const h of hanziList) {
-        if (h.owner === 1) c1++;
-        else c2++;
+        if (h.owner === 1) c1++; else c2++;
       }
       if (c1 < c2) owner = 1;
       else if (c2 < c1) owner = 2;
@@ -622,6 +612,7 @@
 
     if (state !== 'playing') return;
 
+    /* 鍵盤控制 */
     const keySpeed = 650;
     if (keys['a'] || keys['A']) p1Basket.targetX -= keySpeed * dt;
     if (keys['d'] || keys['D']) p1Basket.targetX += keySpeed * dt;
@@ -633,6 +624,7 @@
     p2Basket.targetX = clamp(p2Basket.targetX, MID_X + 50, W - BASKET_HALF_TOP - 20);
     p2Basket.x += (p2Basket.targetX - p2Basket.x) * Math.min(1, dt * 16);
 
+    /* 生成漢字 */
     const allSpawned = p1Idx >= p1Sequence.length && p2Idx >= p2Sequence.length;
     if (!allSpawned) {
       if (spawnCooldown > 0) spawnCooldown -= dt;
@@ -650,6 +642,7 @@
       if (endTimer <= 0) { endLevel(); return; }
     }
 
+    /* 接住區 */
     const zone1 = { x: p1Basket.x - 64, y: 640, w: 128, h: 52 };
     const zone2 = { x: p2Basket.x - 64, y: 640, w: 128, h: 52 };
 
